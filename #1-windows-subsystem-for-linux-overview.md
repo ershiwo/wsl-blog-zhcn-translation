@@ -45,4 +45,36 @@ LXSS 管理服务是 Linux 子系统的驱动代理，同时也是 `Bash.exe` �
 ##系统调用
 
 WSL 通过在 Windows NT 内核上虚拟出一个 Linux 内核界面以执行原生 Linux ELF64 二进制文件。其中公开对外的内核界面就是系统调用（syscalls）。每个调用都是是由内核提供的服务，它们可以在用户态中被调用。Linux 内核和 Windows NT 内核都向用户态公开了数百个系统调用，但是它们的含义不同，通常也不能直接兼容。例如，Linux 内核包含像 `fork`，`open` 和 `kill` 这样的调用，而在 Windows NT 中对应的调用是 `NtCreateProcess`，`NtOpenFile` 和 `NtTerminateProcess`。
-WSL 包换内核态驱动（lsxx.sys 和 lxcore.sys），
+WSL 包含内核态驱动（lsxx.sys 和 lxcore.sys），他们负责在 Windows NT 内核中协调处理Linux 的系统调用请求。该驱动不包含任何来自 Linux 内核的代码，而是完全重写的一个干净的兼容 Linux 内核的界面。在原生 Linux 上，一个由用户界面产生并执行的系统调用会被 Linux 内核处理；而在 WSL 中，同样的工作由 Windows NT 内核转发给 `lxcore.sys` 执行。某些情况下 `lxcore.sys` 把 Linux 系统调用翻译为对应的 Windows NT 调用反而带来了沉重的负担，在没有对应映射的地方 Windows 内核态驱动不得不直接处理那些请求。
+举个例子，Linux 中的 `fork()` 就没有对应的 Windows 调用方法。当向 WSL 发起该调用时，`lxcore.sys` 会为复制进程进行初始化准备工作。然后它会调用内部的 Windows NT 内核 API 中的正确语法创建进程，并完成为新进程复制额外数据的任务。
+
+##文件系统
+
+WSL 中的文件系统支持被设计为实现下列两个目标：
+
+1. 提供一个完整还原的 Linux 文件系统；
+2. 允许与 Windows 间进行驱动器和文件的互通。
+
+WSL 提供了一个可以模拟真实 Linux 内核的虚拟文件系统支持。可以通过以下两种方式访问用户系统上的文件：`VolFs` 和 `DriveFs`。
+
+###VolFs
+
+VolFs 可以提供对 Linux 文件系统的完整支持，包括：
+
+- 可通过如 `chmod` 和 `chroot` 等程序进行修改的 Linux 权限控制；
+- 文件符号链接；
+- 支持被 Windows 认为不合法的文件名字符；
+- 大小写敏感。
+
+Linux 系统，应用程序文件（`/etc`，`/bin`，`/usr`，etc.）以及用户的 Linux 家目录都使用了 VolFs。
+在 VolFs 中不支持与 Windows 程序及文件的互通。
+
+###DriveFs
+
+DriveFs 是设计用来实现与 Windows 互通的文件系统。它要求所有文件名必须是合法的 Windows 文件名，使用 Windows 安全设置，并且不支持所有 Linux 文件系统的特点。文件名大小写敏感，但用户不能创建名称中只有大小写不同的文件。
+当前所有 Windows 卷均以 `/mnt/c`，`/mnt/d`…… 的形式挂载，它们使用 DriveFs。用户可以在这里访问全部 Windows 下的文件。这里允许用户同时使用他们喜爱的 Windows 编辑器（如 Visual Studio Code） 和 Bash 下的开源工具操作文件。
+
+#EOF
+
+![video](https://sec.ch9.ms/ch9/ad03/33a90710-0d66-4c48-8f7f-db974771ad03/WSFLArchitectureDeepuThomas_mid.mp4)
+视频是 Deepu Thomas 和 Seth Juarez 讨论关于 WSL 的底层结构。
