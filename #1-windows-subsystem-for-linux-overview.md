@@ -29,7 +29,7 @@ WSL 是一个可以让原生 Linux ELF64 二进制文件运行在 Windows 中的
 
 这是在用户态 Linux 二进制文件和 Windows 内核组件中间诞生魔法的地方。通过向微进程中置入原生 Linux 二进制文件，我们使 Linux 系统调用被重定向至 Windows 内核中。`lxss.sys` 和 `lxcore.sys` 驱动负责将 Linux 系统调用翻译为 NT API，并模拟 Linux 内核。
 
-![Figure 1: WSL Components](https://xxx.com/xx.png)
+![Figure 1: WSL Components](https://msdnshared.blob.core.windows.net/media/2016/04/LXSS-diagram-1024x472.jpg)
 
 ##LXSS 管理服务
 
@@ -77,4 +77,4 @@ DriveFs 是设计用来实现与 Windows 互通的文件系统。它要求所有
 #EOF
 
 ![video](https://sec.ch9.ms/ch9/ad03/33a90710-0d66-4c48-8f7f-db974771ad03/WSFLArchitectureDeepuThomas_mid.mp4)
-视频是 Deepu Thomas 和 Seth Juarez 讨论关于 WSL 的底层结构。
+视频是 Deepu Thomas 和 Seth Juarez 在讨论关于 WSL 的底层结构。
